@@ -3,4 +3,4 @@
 IGRA_positive host the main code used for retrieving VEdis compatibility curves for a IGRA+ TB trial.
 IGRA_negative allows the user to replicate the method used for analysing IGRA- TB trials.
 
-Further information can be found in README.txt files includen in both folders.
+Further information can be found on README.txt files included in both folders.
