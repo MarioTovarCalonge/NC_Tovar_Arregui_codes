@@ -1,0 +1,55 @@
+#!/bin/bash  
+
+gcc trial_simulator.c -o Times -lm
+gcc discrete_times.c -o discrete_times -lm
+
+N=$1
+Max_iter=50
+Tau=$2
+
+beta=0.069
+p=0.375
+q=0.21
+
+mkdir -p ../IGRA_negative/data/data_$3_$4_$5/eps_reunited/eps_b
+mkdir -p ../IGRA_negative/data/data_$3_$4_$5/eps_reunited/eps_p
+mkdir -p ../IGRA_negative/data/data_$3_$4_$5/eps_reunited/eps_r
+mkdir -p ../IGRA_negative/data/data_$3_$4_$5/Times
+mkdir -p ../IGRA_negative/data/data_$3_$4_$5/eps_b
+mkdir -p ../IGRA_negative/data/data_$3_$4_$5/MLE
+mkdir -p ../IGRA_negative/data/data_$3_$4_$5/rho
+
+##
+## 1st. Simulate one stochastic trial in-silico, given its dimensions, the
+## characterization of the epidemic setting and the ground-truth characteristics
+## of the vaccine, assumed to be known a priori.
+##
+
+./Times $N $Tau $beta $p $q $Max_iter $3 $4 $5
+
+##
+## 2nd. Discretize the times-to-infection and times-to-disease that the previous step produced.
+## This is to take into account the fact that in an actual trial, time resolution for these times
+## is most likely limited (e.g. QFT/diagnostic tests ran once every 3 months)
+##
+
+./discrete_times $N $Tau $Max_iter $3 $4 $5
+
+##
+## 3rd Algorithms to estimate, from the series of (discretized) times-to-infection and times-to-disease,
+## the efficacy of the vaccine at preventing infection (epsilon_beta) and at delaying fast_progression
+## (epsilon_r)
+##
+
+Rscript Hazard_inf.R $Max_iter $3 $4 $5
+Rscript mle.R $Tau $Max_iter $3 $4 $5
+
+##
+## 4rd The efficacy of the vaccine against disease is estimated (VE_dis, or POD ). Then, from the analytic expression that binds VE_dis to the three vaccine descriptors epsilon_beta,epsilon_r and epsilon_p, the last one is isolated and estimated using the values of the others.
+##
+
+python3 Merge.py $N $Tau $beta $p $q $Max_iter $3 $4 $5
+
+
+
+
